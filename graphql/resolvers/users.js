@@ -1,31 +1,16 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const {User} = require('../models')
+const { User} = require('../../models')
 const {UserInputError, AuthenticationError} = require('apollo-server')
 const { Op} = require('sequelize')
 
-const { JWT_SECRET } = require('../config/env.json')
+const { JWT_SECRET } = require('../../config/env.json')
 
 module.exports = {
-
-    //   Query: {
-    //     hello: () => 'worlddd',
-    //   },
       Query: {
-        getUsers: async (_, __, context) => {
+        getUsers: async (_, __, { user }) => {
             try {
-                let user
-                if (context.req && context.req.headers.authorization) {
-                    const token = context.req.headers.authorization.split('Bearer ')[1]
-                    jwt.verify(token, JWT_SECRET, (err, decodedToken) => {
-                        if (err) {
-                            throw new AuthenticationError('Unauthenticated')
-                        }
-                        user = decodedToken
-
-                    })
-                    
-                }
+                if (!user) throw new AuthenticationError('Unauthenticated')                
                 const res = await User.findAll({
                     where: {
                         username: {
@@ -90,21 +75,6 @@ module.exports = {
                 if (!password.trim()) errors.password = 'Password must not be empty'
                 if (!confirmPassword.trim()) errors.confirmPassword = 'Confirm Password must not be empty'
                 if (password !== confirmPassword) errors.confirmPassword = 'Confirm Password must match'
-                // Check if username / email exists
-                // const userByUsername = await User.findOne({
-                //     where: {
-                //         username
-                //     }
-                // })
-                // const userByEmail = await User.findOne({
-                //     where: {
-                //         email
-                //     }
-                // })
-
-                // if (userByUsername) errors.username = 'Username is taken'
-                // if (userByEmail) errors.email = 'Email is taken'
-
                 if (Object.keys(errors).length) {
                     throw errors
                 }
@@ -127,6 +97,6 @@ module.exports = {
                 }
                 throw new UserInputError('Bad inputs', {errors})
             }
-        }
+        },
       }
 };
