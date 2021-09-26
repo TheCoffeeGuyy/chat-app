@@ -8,21 +8,25 @@ import ApolloProvider from './ApolloProvider'
 import Register from './pages/Register';
 import Login from './pages/Login';
 import Home from './pages/Home';
-function App() {
-  
+import DynamicRoute from './utils/DynamicRoute'
 
+import { AuthProvider} from './context/auth'
+
+function App() {
   return (
     <ApolloProvider>
-      <BrowserRouter>
-        <Container className="pt-5">
-          {/* <Register /> */}
-          <Switch>
-            <Route path="/register" component={Register}></Route>
-            <Route path="/login" component={Login}></Route>
-            <Route path="/" exact component={Home}></Route>
-          </Switch>
-        </Container>
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <Container className="pt-5">
+            {/* <Register /> */}
+            <Switch>
+              <DynamicRoute path="/register" component={Register} guest></DynamicRoute>
+              <DynamicRoute path="/login" component={Login} guest></DynamicRoute>
+              <DynamicRoute path="/" exact component={Home} authenticated></DynamicRoute>
+            </Switch>
+          </Container>
+        </BrowserRouter>
+      </AuthProvider>
     </ApolloProvider>
   );
 }
