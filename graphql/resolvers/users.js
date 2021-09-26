@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { User} = require('../../models')
+const { User, Message} = require('../../models')
 const {UserInputError, AuthenticationError} = require('apollo-server')
 const { Op} = require('sequelize')
 
@@ -11,14 +11,29 @@ module.exports = {
         getUsers: async (_, __, { user }) => {
             try {
                 if (!user) throw new AuthenticationError('Unauthenticated')                
-                const res = await User.findAll({
+                let users = await User.findAll({
+                    attribute: ['username', 'imageUrl', 'createdAt'],
                     where: {
                         username: {
                             [Op.ne]: user.username
                         }
                     }
                 })
-                return res
+
+                const allUserMessages = await Message.findAll({
+                    where: {
+                        [Op.or]: [{from: user.username}, { to: user.username}]
+                    },
+                    order: [['createdAt', 'DESC']]
+                })
+
+                users = users.map(otherUsers => {
+                    const latestMessage = allUserMessages.find(m => m.from === otherUsers.username || m.to === otherUsers.username)
+                    otherUsers.latestMessage = latestMessage
+                    return otherUsers
+                })
+
+                return users
             } catch (error) {
                 console.log(error)
                 throw error
@@ -41,7 +56,7 @@ module.exports = {
                     }
                 })    
 
-                if (!username) {
+                if (!user) {
                     errors.username = 'User not found'
                     throw new UserInputError('User not found', {errors})
                 }
