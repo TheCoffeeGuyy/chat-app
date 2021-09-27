@@ -40,7 +40,6 @@ export default function Login(props) {
       const submitLoginForm = async (e) => {
         e.preventDefault()
         loginUser({variables: variablesx})
-        console.log(variablesx)
       }
     return (
         <Row className="bg-white py-5 justify-content-center">
